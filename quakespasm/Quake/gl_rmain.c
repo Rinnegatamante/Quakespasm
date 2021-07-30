@@ -136,9 +136,11 @@ GLSLGamma_DeleteTexture
 */
 void GLSLGamma_DeleteTexture (void)
 {
+#ifndef VITA
 	glDeleteTextures (1, &r_gamma_texture);
 	r_gamma_texture = 0;
 	r_gamma_program = 0; // deleted in R_DeleteShaders
+#endif
 }
 
 /*
@@ -148,6 +150,7 @@ GLSLGamma_CreateShaders
 */
 static void GLSLGamma_CreateShaders (void)
 {
+#ifndef VITA
 	const GLchar *vertSource = \
 		"#version 110\n"
 		"\n"
@@ -178,6 +181,7 @@ static void GLSLGamma_CreateShaders (void)
 	gammaLoc = GL_GetUniformLocation (&r_gamma_program, "GammaValue");
 	contrastLoc = GL_GetUniformLocation (&r_gamma_program, "ContrastValue");
 	textureLoc = GL_GetUniformLocation (&r_gamma_program, "GammaTexture");
+#endif
 }
 
 /*
@@ -187,6 +191,7 @@ GLSLGamma_GammaCorrect
 */
 void GLSLGamma_GammaCorrect (void)
 {
+#ifndef VITA
 	float smax, tmax;
 
 	if (!gl_glsl_gamma_able)
@@ -259,6 +264,7 @@ void GLSLGamma_GammaCorrect (void)
 	
 // clear cached binding
 	GL_ClearBindings ();
+#endif
 }
 
 /*
@@ -708,6 +714,26 @@ R_EmitWireBox -- johnfitz -- draws one axis aligned bounding box
 */
 void R_EmitWireBox (vec3_t mins, vec3_t maxs)
 {
+#ifdef VITA
+	glBegin (GL_QUADS);
+	glVertex3f (mins[0], mins[1], mins[2]);
+	glVertex3f (mins[0], mins[1], maxs[2]);
+	glVertex3f (maxs[0], mins[1], mins[2]);
+	glVertex3f (maxs[0], mins[1], maxs[2]);
+	glVertex3f (maxs[0], mins[1], mins[2]);
+	glVertex3f (maxs[0], mins[1], maxs[2]);
+	glVertex3f (maxs[0], maxs[1], mins[2]);
+	glVertex3f (maxs[0], maxs[1], maxs[2]);
+	glVertex3f (maxs[0], maxs[1], mins[2]);
+	glVertex3f (maxs[0], maxs[1], maxs[2]);
+	glVertex3f (mins[0], maxs[1], mins[2]);
+	glVertex3f (mins[0], maxs[1], maxs[2]);
+	glVertex3f (mins[0], maxs[1], mins[2]);
+	glVertex3f (mins[0], maxs[1], maxs[2]);
+	glVertex3f (mins[0], mins[1], mins[2]);
+	glVertex3f (mins[0], mins[1], maxs[2]);
+	glEnd ();
+#else
 	glBegin (GL_QUAD_STRIP);
 	glVertex3f (mins[0], mins[1], mins[2]);
 	glVertex3f (mins[0], mins[1], maxs[2]);
@@ -720,6 +746,7 @@ void R_EmitWireBox (vec3_t mins, vec3_t maxs)
 	glVertex3f (mins[0], mins[1], mins[2]);
 	glVertex3f (mins[0], mins[1], maxs[2]);
 	glEnd ();
+#endif
 }
 
 /*
@@ -951,8 +978,10 @@ R_ScaleView_DeleteTexture
 */
 void R_ScaleView_DeleteTexture (void)
 {
+#ifndef VITA
 	glDeleteTextures (1, &r_scaleview_texture);
 	r_scaleview_texture = 0;
+#endif
 }
 
 /*
@@ -967,6 +996,7 @@ or possibly as a perforance boost on slow graphics cards.
 */
 void R_ScaleView (void)
 {
+#ifndef VITA
 	float smax, tmax;
 	int scale;
 	int srcx, srcy, srcw, srch;
@@ -1046,6 +1076,7 @@ void R_ScaleView (void)
 
 	// clear cached binding
 	GL_ClearBindings ();
+#endif
 }
 
 /*

@@ -50,7 +50,9 @@
 #if defined(PLATFORM_UNIX) || defined(PLATFORM_RISCOS)
 
 #include <sys/param.h>
+#ifndef VITA
 #include <sys/ioctl.h>
+#endif
 #if defined(__sun) || defined(sun)
 #include <sys/filio.h>
 #include <sys/sockio.h>
@@ -81,8 +83,10 @@ typedef int	socklen_t;			/* defining as signed int to match the old api */
 
 #define	socketerror(x)	strerror((x))
 
+#ifndef VITA
 /* Verify that we defined HAVE_SA_LEN correctly: */
 COMPILE_TIME_ASSERT(sockaddr, offsetof(struct sockaddr, sa_family) == SA_FAM_OFFSET);
+#endif
 
 #endif	/* end of unix stuff */
 

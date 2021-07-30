@@ -133,7 +133,9 @@ void R_RenderDlights (void)
 											//  advanced yet for this frame
 	glDepthMask (0);
 	glDisable (GL_TEXTURE_2D);
+#ifndef VITA
 	glShadeModel (GL_SMOOTH);
+#endif
 	glEnable (GL_BLEND);
 	glBlendFunc (GL_ONE, GL_ONE);
 

@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 extern cvar_t r_drawflat;
 
-cvar_t r_oldwater = {"r_oldwater", "0", CVAR_ARCHIVE};
+cvar_t r_oldwater = {"r_oldwater", "1", CVAR_ARCHIVE};
 cvar_t r_waterquality = {"r_waterquality", "8", CVAR_NONE};
 cvar_t r_waterwarp = {"r_waterwarp", "1", CVAR_NONE};
 
@@ -184,7 +184,11 @@ void DrawWaterPoly (glpoly_t *p)
 
 	if (load_subdivide_size > 48)
 	{
+#ifdef VITA
+		glBegin (GL_TRIANGLE_FAN);
+#else
 		glBegin (GL_POLYGON);
+#endif
 		v = p->verts[0];
 		for (i=0 ; i<p->numverts ; i++, v+= VERTEXSIZE)
 		{
@@ -195,7 +199,11 @@ void DrawWaterPoly (glpoly_t *p)
 	}
 	else
 	{
+#ifdef VITA
+		glBegin (GL_TRIANGLE_FAN);
+#else
 		glBegin (GL_POLYGON);
+#endif
 		v = p->verts[0];
 		for (i=0 ; i<p->numverts ; i++, v+= VERTEXSIZE)
 		{
@@ -219,6 +227,7 @@ R_UpdateWarpTextures -- johnfitz -- each frame, update warping textures
 */
 void R_UpdateWarpTextures (void)
 {
+#ifndef VITA
 	texture_t *tx;
 	int i;
 	float x, y, x2, warptess;
@@ -269,4 +278,5 @@ void R_UpdateWarpTextures (void)
 
 	//if viewsize is less than 100, we need to redraw the frame around the viewport
 	scr_tileclear_updates = 0;
+#endif
 }

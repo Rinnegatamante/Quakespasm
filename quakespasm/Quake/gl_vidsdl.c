@@ -26,6 +26,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "cfgfile.h"
 #include "bgmusic.h"
 #include "resource.h"
+#ifdef VITA
+#include <vitasdk.h>
+#endif
 #if defined(SDL_FRAMEWORK) || defined(NO_SDL_CONFIG)
 #if defined(USE_SDL2)
 #include <SDL2/SDL.h>
@@ -330,7 +333,9 @@ VID_GetCurrentWidth
 */
 static int VID_GetCurrentWidth (void)
 {
-#if defined(USE_SDL2)
+#ifdef VITA
+	return 960;
+#elif defined(USE_SDL2)
 	int w = 0, h = 0;
 	SDL_GetWindowSize(draw_context, &w, &h);
 	return w;
@@ -346,7 +351,9 @@ VID_GetCurrentHeight
 */
 static int VID_GetCurrentHeight (void)
 {
-#if defined(USE_SDL2)
+#ifdef VITA
+	return 544;
+#elif defined(USE_SDL2)
 	int w = 0, h = 0;
 	SDL_GetWindowSize(draw_context, &w, &h);
 	return h;
@@ -362,7 +369,9 @@ VID_GetCurrentRefreshRate
 */
 static int VID_GetCurrentRefreshRate (void)
 {
-#if defined(USE_SDL2)
+#ifdef VITA
+	return 60;
+#elif defined(USE_SDL2)
 	SDL_DisplayMode mode;
 	int current_display;
 	
@@ -386,7 +395,9 @@ VID_GetCurrentBPP
 */
 static int VID_GetCurrentBPP (void)
 {
-#if defined(USE_SDL2)
+#ifdef VITA
+	return 32;
+#elif defined(USE_SDL2)
 	const Uint32 pixelFormat = SDL_GetWindowPixelFormat(draw_context);
 	return SDL_BITSPERPIXEL(pixelFormat);
 #else
@@ -403,7 +414,9 @@ returns true if we are in regular fullscreen or "desktop fullscren"
 */
 static qboolean VID_GetFullscreen (void)
 {
-#if defined(USE_SDL2)
+#ifdef VITA
+	return true;
+#elif defined(USE_SDL2)
 	return (SDL_GetWindowFlags(draw_context) & SDL_WINDOW_FULLSCREEN) != 0;
 #else
 	return (draw_context->flags & SDL_FULLSCREEN) != 0;
@@ -419,7 +432,9 @@ returns true if we are specifically in "desktop fullscreen" mode
 */
 static qboolean VID_GetDesktopFullscreen (void)
 {
-#if defined(USE_SDL2)
+#ifdef VITA
+	return true;
+#elif defined(USE_SDL2)
 	return (SDL_GetWindowFlags(draw_context) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN_DESKTOP;
 #else
 	return false;
@@ -433,7 +448,9 @@ VID_GetVSync
 */
 static qboolean VID_GetVSync (void)
 {
-#if defined(USE_SDL2)
+#ifdef VITA
+	return true;
+#elif defined(USE_SDL2)
 	return SDL_GL_GetSwapInterval() == 1;
 #else
 	int swap_control;
@@ -600,16 +617,18 @@ static qboolean VID_SetMode (int width, int height, int refreshrate, int bpp, qb
 		depthbits = 24;
 		stencilbits = 8;
 	}
+#ifndef VITA
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, depthbits);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilbits);
 
 	/* fsaa */
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, fsaa > 0 ? 1 : 0);
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, fsaa);
-
+#endif
 	q_snprintf(caption, sizeof(caption), "QuakeSpasm " QUAKESPASM_VER_STRING);
 
 #if defined(USE_SDL2)
+#ifndef VITA
 	/* Create the window if needed, hidden */
 	if (!draw_context)
 	{
@@ -641,7 +660,10 @@ static qboolean VID_SetMode (int width, int height, int refreshrate, int bpp, qb
 	{
 		previous_display = SDL_GetWindowDisplayIndex(draw_context);
 	}
-
+#else
+	
+#endif
+#ifndef VITA
 	/* Ensure the window is not fullscreen */
 	if (VID_GetFullscreen ())
 	{
@@ -676,11 +698,12 @@ static qboolean VID_SetMode (int width, int height, int refreshrate, int bpp, qb
 		if (!gl_context)
 			Sys_Error("Couldn't create GL context");
 	}
-
+#endif
 	gl_swap_control = true;
+#ifndef VITA
 	if (SDL_GL_SetSwapInterval ((vid_vsync.value) ? 1 : 0) == -1)
 		gl_swap_control = false;
-
+#endif
 #else /* !defined(USE_SDL2) */
 
 	flags = DEFAULT_SDL_FLAGS;
@@ -720,7 +743,11 @@ static qboolean VID_SetMode (int width, int height, int refreshrate, int bpp, qb
 	vid.conwidth = vid.width & 0xFFFFFFF8;
 	vid.conheight = vid.conwidth * vid.height / vid.width;
 	vid.numpages = 2;
-
+	
+#ifdef VITA
+	depthbits = 32;
+	gl_stencilbits = 8;
+#else
 // read the obtained z-buffer depth
 	if (SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depthbits) == -1)
 		depthbits = 0;
@@ -732,7 +759,7 @@ static qboolean VID_SetMode (int width, int height, int refreshrate, int bpp, qb
 // read stencil bits
 	if (SDL_GL_GetAttribute(SDL_GL_STENCIL_SIZE, &gl_stencilbits) == -1)
 		gl_stencilbits = 0;
-
+#endif
 	modestate = VID_GetFullscreen() ? MS_FULLSCREEN : MS_WINDOWED;
 
 	CDAudio_Resume ();
@@ -1002,11 +1029,11 @@ static void GL_CheckExtensions (void)
 		Con_Warning ("OpenGL version < 1.5, skipping ARB_vertex_buffer_object check\n");
 	else
 	{
-		GL_BindBufferFunc = (PFNGLBINDBUFFERARBPROC) SDL_GL_GetProcAddress("glBindBufferARB");
-		GL_BufferDataFunc = (PFNGLBUFFERDATAARBPROC) SDL_GL_GetProcAddress("glBufferDataARB");
-		GL_BufferSubDataFunc = (PFNGLBUFFERSUBDATAARBPROC) SDL_GL_GetProcAddress("glBufferSubDataARB");
-		GL_DeleteBuffersFunc = (PFNGLDELETEBUFFERSARBPROC) SDL_GL_GetProcAddress("glDeleteBuffersARB");
-		GL_GenBuffersFunc = (PFNGLGENBUFFERSARBPROC) SDL_GL_GetProcAddress("glGenBuffersARB");
+		GL_BindBufferFunc = (PFNGLBINDBUFFERARBPROC) vglGetProcAddress("glBindBufferARB");
+		GL_BufferDataFunc = (PFNGLBUFFERDATAARBPROC) vglGetProcAddress("glBufferDataARB");
+		GL_BufferSubDataFunc = (PFNGLBUFFERSUBDATAARBPROC) vglGetProcAddress("glBufferSubDataARB");
+		GL_DeleteBuffersFunc = (PFNGLDELETEBUFFERSARBPROC) vglGetProcAddress("glDeleteBuffersARB");
+		GL_GenBuffersFunc = (PFNGLGENBUFFERSARBPROC) vglGetProcAddress("glGenBuffersARB");
 		if (GL_BindBufferFunc && GL_BufferDataFunc && GL_BufferSubDataFunc && GL_DeleteBuffersFunc && GL_GenBuffersFunc)
 		{
 			Con_Printf("FOUND: ARB_vertex_buffer_object\n");
@@ -1024,9 +1051,9 @@ static void GL_CheckExtensions (void)
 		Con_Warning ("Mutitexture disabled at command line\n");
 	else if (GL_ParseExtensionList(gl_extensions, "GL_ARB_multitexture"))
 	{
-		GL_MTexCoord2fFunc = (PFNGLMULTITEXCOORD2FARBPROC) SDL_GL_GetProcAddress("glMultiTexCoord2fARB");
-		GL_SelectTextureFunc = (PFNGLACTIVETEXTUREARBPROC) SDL_GL_GetProcAddress("glActiveTextureARB");
-		GL_ClientActiveTextureFunc = (PFNGLCLIENTACTIVETEXTUREARBPROC) SDL_GL_GetProcAddress("glClientActiveTextureARB");
+		GL_MTexCoord2fFunc = (PFNGLMULTITEXCOORD2FARBPROC) vglGetProcAddress("glMultiTexCoord2fARB");
+		GL_SelectTextureFunc = (PFNGLACTIVETEXTUREARBPROC) vglGetProcAddress("glActiveTextureARB");
+		GL_ClientActiveTextureFunc = (PFNGLCLIENTACTIVETEXTUREARBPROC) vglGetProcAddress("glClientActiveTextureARB");
 		if (GL_MTexCoord2fFunc && GL_SelectTextureFunc && GL_ClientActiveTextureFunc)
 		{
 			Con_Printf("FOUND: ARB_multitexture\n");
@@ -1085,6 +1112,7 @@ static void GL_CheckExtensions (void)
 
 	// swap control
 	//
+#ifndef VITA
 	if (!gl_swap_control)
 	{
 #if defined(USE_SDL2)
@@ -1119,9 +1147,10 @@ static void GL_CheckExtensions (void)
 		Con_Printf("FOUND: SDL_GL_SWAP_CONTROL\n");
 #endif
 	}
-
+#endif
 	// anisotropic filtering
 	//
+#ifndef VITA
 	if (GL_ParseExtensionList(gl_extensions, "GL_EXT_texture_filter_anisotropic"))
 	{
 		float test1,test2;
@@ -1157,6 +1186,7 @@ static void GL_CheckExtensions (void)
 		}
 	}
 	else
+#endif
 	{
 		gl_max_anisotropy = 1;
 		Con_Warning ("texture_filter_anisotropic not supported\n");
@@ -1182,29 +1212,29 @@ static void GL_CheckExtensions (void)
 		Con_Warning ("GLSL disabled at command line\n");
 	else if (gl_version_major >= 2)
 	{
-		GL_CreateShaderFunc = (QS_PFNGLCREATESHADERPROC) SDL_GL_GetProcAddress("glCreateShader");
-		GL_DeleteShaderFunc = (QS_PFNGLDELETESHADERPROC) SDL_GL_GetProcAddress("glDeleteShader");
-		GL_DeleteProgramFunc = (QS_PFNGLDELETEPROGRAMPROC) SDL_GL_GetProcAddress("glDeleteProgram");
-		GL_ShaderSourceFunc = (QS_PFNGLSHADERSOURCEPROC) SDL_GL_GetProcAddress("glShaderSource");
-		GL_CompileShaderFunc = (QS_PFNGLCOMPILESHADERPROC) SDL_GL_GetProcAddress("glCompileShader");
-		GL_GetShaderivFunc = (QS_PFNGLGETSHADERIVPROC) SDL_GL_GetProcAddress("glGetShaderiv");
-		GL_GetShaderInfoLogFunc = (QS_PFNGLGETSHADERINFOLOGPROC) SDL_GL_GetProcAddress("glGetShaderInfoLog");
-		GL_GetProgramivFunc = (QS_PFNGLGETPROGRAMIVPROC) SDL_GL_GetProcAddress("glGetProgramiv");
-		GL_GetProgramInfoLogFunc = (QS_PFNGLGETPROGRAMINFOLOGPROC) SDL_GL_GetProcAddress("glGetProgramInfoLog");
-		GL_CreateProgramFunc = (QS_PFNGLCREATEPROGRAMPROC) SDL_GL_GetProcAddress("glCreateProgram");
-		GL_AttachShaderFunc = (QS_PFNGLATTACHSHADERPROC) SDL_GL_GetProcAddress("glAttachShader");
-		GL_LinkProgramFunc = (QS_PFNGLLINKPROGRAMPROC) SDL_GL_GetProcAddress("glLinkProgram");
-		GL_BindAttribLocationFunc = (QS_PFNGLBINDATTRIBLOCATIONFUNC) SDL_GL_GetProcAddress("glBindAttribLocation");
-		GL_UseProgramFunc = (QS_PFNGLUSEPROGRAMPROC) SDL_GL_GetProcAddress("glUseProgram");
-		GL_GetAttribLocationFunc = (QS_PFNGLGETATTRIBLOCATIONPROC) SDL_GL_GetProcAddress("glGetAttribLocation");
-		GL_VertexAttribPointerFunc = (QS_PFNGLVERTEXATTRIBPOINTERPROC) SDL_GL_GetProcAddress("glVertexAttribPointer");
-		GL_EnableVertexAttribArrayFunc = (QS_PFNGLENABLEVERTEXATTRIBARRAYPROC) SDL_GL_GetProcAddress("glEnableVertexAttribArray");
-		GL_DisableVertexAttribArrayFunc = (QS_PFNGLDISABLEVERTEXATTRIBARRAYPROC) SDL_GL_GetProcAddress("glDisableVertexAttribArray");
-		GL_GetUniformLocationFunc = (QS_PFNGLGETUNIFORMLOCATIONPROC) SDL_GL_GetProcAddress("glGetUniformLocation");
-		GL_Uniform1iFunc = (QS_PFNGLUNIFORM1IPROC) SDL_GL_GetProcAddress("glUniform1i");
-		GL_Uniform1fFunc = (QS_PFNGLUNIFORM1FPROC) SDL_GL_GetProcAddress("glUniform1f");
-		GL_Uniform3fFunc = (QS_PFNGLUNIFORM3FPROC) SDL_GL_GetProcAddress("glUniform3f");
-		GL_Uniform4fFunc = (QS_PFNGLUNIFORM4FPROC) SDL_GL_GetProcAddress("glUniform4f");
+		GL_CreateShaderFunc = (QS_PFNGLCREATESHADERPROC) vglGetProcAddress("glCreateShader");
+		GL_DeleteShaderFunc = (QS_PFNGLDELETESHADERPROC) vglGetProcAddress("glDeleteShader");
+		GL_DeleteProgramFunc = (QS_PFNGLDELETEPROGRAMPROC) vglGetProcAddress("glDeleteProgram");
+		GL_ShaderSourceFunc = (QS_PFNGLSHADERSOURCEPROC) vglGetProcAddress("glShaderSource");
+		GL_CompileShaderFunc = (QS_PFNGLCOMPILESHADERPROC) vglGetProcAddress("glCompileShader");
+		GL_GetShaderivFunc = (QS_PFNGLGETSHADERIVPROC) vglGetProcAddress("glGetShaderiv");
+		GL_GetShaderInfoLogFunc = (QS_PFNGLGETSHADERINFOLOGPROC) vglGetProcAddress("glGetShaderInfoLog");
+		GL_GetProgramivFunc = (QS_PFNGLGETPROGRAMIVPROC) vglGetProcAddress("glGetProgramiv");
+		GL_GetProgramInfoLogFunc = (QS_PFNGLGETPROGRAMINFOLOGPROC) vglGetProcAddress("glGetProgramInfoLog");
+		GL_CreateProgramFunc = (QS_PFNGLCREATEPROGRAMPROC) vglGetProcAddress("glCreateProgram");
+		GL_AttachShaderFunc = (QS_PFNGLATTACHSHADERPROC) vglGetProcAddress("glAttachShader");
+		GL_LinkProgramFunc = (QS_PFNGLLINKPROGRAMPROC) vglGetProcAddress("glLinkProgram");
+		GL_BindAttribLocationFunc = (QS_PFNGLBINDATTRIBLOCATIONFUNC) vglGetProcAddress("glBindAttribLocation");
+		GL_UseProgramFunc = (QS_PFNGLUSEPROGRAMPROC) vglGetProcAddress("glUseProgram");
+		GL_GetAttribLocationFunc = (QS_PFNGLGETATTRIBLOCATIONPROC) vglGetProcAddress("glGetAttribLocation");
+		GL_VertexAttribPointerFunc = (QS_PFNGLVERTEXATTRIBPOINTERPROC) vglGetProcAddress("glVertexAttribPointer");
+		GL_EnableVertexAttribArrayFunc = (QS_PFNGLENABLEVERTEXATTRIBARRAYPROC) vglGetProcAddress("glEnableVertexAttribArray");
+		GL_DisableVertexAttribArrayFunc = (QS_PFNGLDISABLEVERTEXATTRIBARRAYPROC) vglGetProcAddress("glDisableVertexAttribArray");
+		GL_GetUniformLocationFunc = (QS_PFNGLGETUNIFORMLOCATIONPROC) vglGetProcAddress("glGetUniformLocation");
+		GL_Uniform1iFunc = (QS_PFNGLUNIFORM1IPROC) vglGetProcAddress("glUniform1i");
+		GL_Uniform1fFunc = (QS_PFNGLUNIFORM1FPROC) vglGetProcAddress("glUniform1f");
+		GL_Uniform3fFunc = (QS_PFNGLUNIFORM3FPROC) vglGetProcAddress("glUniform3f");
+		GL_Uniform4fFunc = (QS_PFNGLUNIFORM4FPROC) vglGetProcAddress("glUniform4f");
 
 		if (GL_CreateShaderFunc &&
 			GL_DeleteShaderFunc &&
@@ -1286,8 +1316,10 @@ static void GL_SetupState (void)
 	glEnable(GL_ALPHA_TEST);
 	glAlphaFunc(GL_GREATER, 0.666);
 	glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+#ifndef VITA
 	glShadeModel (GL_FLAT);
 	glHint (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST); //johnfitz
+#endif
 	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -1305,6 +1337,27 @@ GL_Init
 */
 static void GL_Init (void)
 {
+#ifdef VITA
+	vglInitExtended(20 * 1024 * 1024, 960, 544, 2 * 1024 * 1024, SCE_GXM_MULTISAMPLE_4X);
+
+	// Checking for libshacccg.suprx existence
+	SceIoStat st1, st2;
+	if (!(sceIoGetstat("ur0:/data/libshacccg.suprx", &st1) >= 0 || sceIoGetstat("ur0:/data/external/libshacccg.suprx", &st2) >= 0)) {
+		SceMsgDialogUserMessageParam msg_param;
+		sceClibMemset(&msg_param, 0, sizeof(SceMsgDialogUserMessageParam));
+		msg_param.buttonType = SCE_MSG_DIALOG_BUTTON_TYPE_OK;
+		msg_param.msg = (const SceChar8*)"Error: Runtime shader compiler (libshacccg.suprx) is not installed.";
+		SceMsgDialogParam param;
+		sceMsgDialogParamInit(&param);
+		param.mode = SCE_MSG_DIALOG_MODE_USER_MSG;
+		param.userMsgParam = &msg_param;
+		sceMsgDialogInit(&param);
+		while (sceMsgDialogGetStatus() != SCE_COMMON_DIALOG_STATUS_FINISHED) {
+			vglSwapBuffers(GL_TRUE);
+		}
+		sceKernelExitProcess(0);
+	}
+#endif
 	gl_vendor = (const char *) glGetString (GL_VENDOR);
 	gl_renderer = (const char *) glGetString (GL_RENDERER);
 	gl_version = (const char *) glGetString (GL_VERSION);
@@ -1368,6 +1421,9 @@ GL_EndRendering
 */
 void GL_EndRendering (void)
 {
+#ifdef VITA
+		vglSwapBuffers(GL_FALSE);
+#elif defined(USE_SDL2)
 	if (!scr_skipupdate)
 	{
 #if defined(USE_SDL2)
@@ -1376,6 +1432,7 @@ void GL_EndRendering (void)
 		SDL_GL_SwapBuffers();
 #endif
 	}
+#endif
 }
 
 
@@ -1613,7 +1670,7 @@ void	VID_Init (void)
 	Cmd_AddCommand ("vid_describemodes", VID_DescribeModes_f);
 
 	putenv (vid_center);	/* SDL_putenv is problematic in versions <= 1.2.9 */
-
+#ifndef VITA
 	if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0)
 		Sys_Error("Couldn't init SDL video: %s", SDL_GetError());
 
@@ -1636,6 +1693,12 @@ void	VID_Init (void)
 		display_refreshrate = DEFAULT_REFRESHRATE;
 		display_bpp = info->vfmt->BitsPerPixel;
 	}
+#endif
+#else
+	display_width = 960;
+	display_height = 544;
+	display_refreshrate = DEFAULT_REFRESHRATE;
+	display_bpp = 32;
 #endif
 
 	Cvar_SetValueQuick (&vid_bpp, (float)display_bpp);

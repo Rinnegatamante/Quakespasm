@@ -540,7 +540,11 @@ void R_DrawTextureChains_Multitexture (qmodel_t *model, entity_t *ent, texchain_
 					bound = true;
 				}
 				GL_Bind (lightmap[s->lightmaptexturenum].texture);
+#ifdef VITA
+				glBegin(GL_TRIANGLE_FAN);
+#else
 				glBegin(GL_POLYGON);
+#endif
 				v = s->polys->verts[0];
 				for (j=0 ; j<s->polys->numverts ; j++, v+= VERTEXSIZE)
 				{
@@ -783,7 +787,11 @@ void R_DrawLightmapChains (void)
 		GL_Bind (lightmap[i].texture);
 		for (p = lightmap[i].polys; p; p=p->chain)
 		{
+#ifdef VITA
+			glBegin(GL_TRIANGLE_FAN);
+#else
 			glBegin (GL_POLYGON);
+#endif
 			v = p->verts[0];
 			for (j=0 ; j<p->numverts ; j++, v+= VERTEXSIZE)
 			{

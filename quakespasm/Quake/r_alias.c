@@ -650,7 +650,7 @@ void R_DrawAliasModel (entity_t *e)
 	R_RotateForEntity (lerpdata.origin, lerpdata.angles);
 	glTranslatef (paliashdr->scale_origin[0], paliashdr->scale_origin[1], paliashdr->scale_origin[2]);
 	glScalef (paliashdr->scale[0], paliashdr->scale[1], paliashdr->scale[2]);
-
+#ifndef VITA
 	//
 	// random stuff
 	//
@@ -658,6 +658,7 @@ void R_DrawAliasModel (entity_t *e)
 		glShadeModel (GL_SMOOTH);
 	if (gl_affinemodels.value)
 		glHint (GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+#endif
 	overbright = gl_overbright_models.value;
 	shading = true;
 
@@ -884,8 +885,10 @@ void R_DrawAliasModel (entity_t *e)
 
 cleanup:
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+#ifndef VITA
 	glHint (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glShadeModel (GL_FLAT);
+#endif
 	glDepthMask(GL_TRUE);
 	glDisable(GL_BLEND);
 	if (alphatest)

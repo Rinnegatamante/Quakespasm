@@ -26,6 +26,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "quakedef.h"
 #include "net_defs.h"
 
+#ifdef VITA
+#include <vitasdk.h>
+static void *net_memory = NULL;
+#define NET_INIT_SIZE 1*1024*1024
+#endif
+
 static sys_socket_t net_acceptsocket = INVALID_SOCKET;	// socket for fielding new connections
 static sys_socket_t net_controlsocket;
 static sys_socket_t net_broadcastsocket = 0;
@@ -48,6 +54,46 @@ sys_socket_t UDP_Init (void)
 	if (COM_CheckParm ("-noudp"))
 		return INVALID_SOCKET;
 
+#if defined(VITA)
+	// Start SceNet & SceNetCtl
+	SceNetInitParam initparam;
+	int ret = sceNetShowNetstat();
+	if (ret == SCE_NET_ERROR_ENOTINIT) {
+		net_memory = malloc(NET_INIT_SIZE);
+
+		initparam.memory = net_memory;
+		initparam.size = NET_INIT_SIZE;
+		initparam.flags = 0;
+
+		ret = sceNetInit(&initparam);
+		if (ret < 0) return -1;
+
+		ret = sceNetCtlInit();
+		if (ret < 0){
+			sceNetTerm();
+			free(net_memory);
+			return -1;
+		}
+	}	
+
+	// Getting IP address
+	SceNetCtlInfo info;
+	sceNetCtlInetGetInfo(SCE_NETCTL_INFO_GET_IP_ADDRESS, &info);
+	sceNetInetPton(SCE_NET_AF_INET, info.ip_address, &myAddr);
+
+	// if the quake hostname isn't set, set it to player nickname
+	if (!strcmp(hostname.string, "UNNAMED"))
+	{
+		SceAppUtilInitParam init_param;
+		SceAppUtilBootParam boot_param;
+		memset(&init_param, 0, sizeof(SceAppUtilInitParam));
+		memset(&boot_param, 0, sizeof(SceAppUtilBootParam));
+		sceAppUtilInit(&init_param, &boot_param);
+		char nick[SCE_SYSTEM_PARAM_USERNAME_MAXSIZE];
+		sceAppUtilSystemParamGetString(SCE_SYSTEM_PARAM_ID_USERNAME, nick, SCE_SYSTEM_PARAM_USERNAME_MAXSIZE);
+		Cvar_Set ("hostname", nick);
+	}
+#else
 	// determine my name & address
 	myAddr = htonl(INADDR_LOOPBACK);
 	if (gethostname(buff, MAXHOSTNAMELEN) != 0)
@@ -84,7 +130,7 @@ sys_socket_t UDP_Init (void)
 			myAddr = *(in_addr_t *)local->h_addr_list[0];
 		}
 	}
-
+#endif
 	if ((net_controlsocket = UDP_OpenSocket(0)) == INVALID_SOCKET)
 	{
 		Con_SafePrintf("UDP_Init: Unable to open control socket, UDP disabled\n");
@@ -151,7 +197,11 @@ sys_socket_t UDP_OpenSocket (int port)
 		return INVALID_SOCKET;
 	}
 
+#ifdef VITA
+	if (setsockopt(newsocket, SOL_SOCKET, SCE_NET_SO_NBIO, (char *)&_true, sizeof(uint32_t)) == -1)
+#else
 	if (ioctlsocket (newsocket, FIONBIO, &_true) == SOCKET_ERROR)
+#endif
 		goto ErrorReturn;
 
 	memset(&address, 0, sizeof(struct sockaddr_in));
@@ -251,7 +301,7 @@ sys_socket_t UDP_CheckNewConnections (void)
 
 	if (net_acceptsocket == INVALID_SOCKET)
 		return INVALID_SOCKET;
-
+#ifndef VITA
 	if (ioctl (net_acceptsocket, FIONREAD, &available) == -1)
 	{
 		int err = SOCKETERRNO;
@@ -259,6 +309,11 @@ sys_socket_t UDP_CheckNewConnections (void)
 	}
 	if (available)
 		return net_acceptsocket;
+#else
+	char buf[4096];
+	if (recvfrom(net_acceptsocket, buf, sizeof(buf), MSG_PEEK, NULL, NULL) >= 0)
+		return net_acceptsocket;
+#endif
 	// quietly absorb empty packets
 	recvfrom (net_acceptsocket, buff, 0, 0, (struct sockaddr *) &from, &fromlen);
 	return INVALID_SOCKET;

@@ -32,7 +32,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define DEFAULT_DENSITY 0.0
 #define DEFAULT_GRAY 0.3
 
-float fog_density;
+float fog_density_gl;
 float fog_red;
 float fog_green;
 float fog_blue;
@@ -63,21 +63,21 @@ void Fog_Update (float density, float red, float green, float blue, float time)
 			float f;
 
 			f = (fade_done - cl.time) / fade_time;
-			old_density = f * old_density + (1.0 - f) * fog_density;
+			old_density = f * old_density + (1.0 - f) * fog_density_gl;
 			old_red = f * old_red + (1.0 - f) * fog_red;
 			old_green = f * old_green + (1.0 - f) * fog_green;
 			old_blue = f * old_blue + (1.0 - f) * fog_blue;
 		}
 		else
 		{
-			old_density = fog_density;
+			old_density = fog_density_gl;
 			old_red = fog_red;
 			old_green = fog_green;
 			old_blue = fog_blue;
 		}
 	}
 
-	fog_density = density;
+	fog_density_gl = density;
 	fog_red = red;
 	fog_green = green;
 	fog_blue = blue;
@@ -123,7 +123,7 @@ void Fog_FogCommand_f (void)
 		Con_Printf("   fog <red> <green> <blue>\n");
 		Con_Printf("   fog <density> <red> <green> <blue>\n");
 		Con_Printf("current values:\n");
-		Con_Printf("   \"density\" is \"%f\"\n", fog_density);
+		Con_Printf("   \"density\" is \"%f\"\n", fog_density_gl);
 		Con_Printf("   \"red\" is \"%f\"\n", fog_red);
 		Con_Printf("   \"green\" is \"%f\"\n", fog_green);
 		Con_Printf("   \"blue\" is \"%f\"\n", fog_blue);
@@ -143,7 +143,7 @@ void Fog_FogCommand_f (void)
 				   atof(Cmd_Argv(2)));
 		break;
 	case 4:
-		Fog_Update(fog_density,
+		Fog_Update(fog_density_gl,
 				   CLAMP(0.0, atof(Cmd_Argv(1)), 1.0),
 				   CLAMP(0.0, atof(Cmd_Argv(2)), 1.0),
 				   CLAMP(0.0, atof(Cmd_Argv(3)), 1.0),
@@ -179,7 +179,7 @@ void Fog_ParseWorldspawn (void)
 	const char *data;
 
 	//initially no fog
-	fog_density = DEFAULT_DENSITY;
+	fog_density_gl = DEFAULT_DENSITY;
 	fog_red = DEFAULT_GRAY;
 	fog_green = DEFAULT_GRAY;
 	fog_blue = DEFAULT_GRAY;
@@ -217,7 +217,7 @@ void Fog_ParseWorldspawn (void)
 
 		if (!strcmp("fog", key))
 		{
-			sscanf(value, "%f %f %f %f", &fog_density, &fog_red, &fog_green, &fog_blue);
+			sscanf(value, "%f %f %f %f", &fog_density_gl, &fog_red, &fog_green, &fog_blue);
 		}
 	}
 }
@@ -272,10 +272,10 @@ float Fog_GetDensity (void)
 	if (fade_done > cl.time)
 	{
 		f = (fade_done - cl.time) / fade_time;
-		return f * old_density + (1.0 - f) * fog_density;
+		return f * old_density + (1.0 - f) * fog_density_gl;
 	}
 	else
-		return fog_density;
+		return fog_density_gl;
 }
 
 /*
@@ -389,7 +389,7 @@ void Fog_Init (void)
 	//Cvar_RegisterVariable (&r_vfog);
 
 	//set up global fog
-	fog_density = DEFAULT_DENSITY;
+	fog_density_gl = DEFAULT_DENSITY;
 	fog_red = DEFAULT_GRAY;
 	fog_green = DEFAULT_GRAY;
 	fog_blue = DEFAULT_GRAY;

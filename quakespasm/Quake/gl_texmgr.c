@@ -24,8 +24,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "quakedef.h"
 
-const int	gl_solid_format = 3;
-const int	gl_alpha_format = 4;
+const int	gl_solid_format = GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
+const int	gl_alpha_format = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 
 static cvar_t	gl_texturemode = {"gl_texturemode", "", CVAR_ARCHIVE};
 static cvar_t	gl_texture_anisotropy = {"gl_texture_anisotropy", "1", CVAR_ARCHIVE};
@@ -110,7 +110,7 @@ static void TexMgr_SetFilterModes (gltexture_t *glt)
 	{
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glmodes[glmode_idx].magfilter);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, glmodes[glmode_idx].minfilter);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, gl_texture_anisotropy.value);
+		//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, gl_texture_anisotropy.value);
 	}
 	else
 	{
@@ -190,7 +190,7 @@ static void TexMgr_Anisotropy_f (cvar_t *var)
 			GL_Bind (glt);
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glmodes[glmode_idx].magfilter);
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, glmodes[glmode_idx].minfilter);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, gl_texture_anisotropy.value);
+			//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, gl_texture_anisotropy.value);
 		    }
 		}
 	}
@@ -246,6 +246,7 @@ static void TexMgr_Imagedump_f (void)
 		q_snprintf(tganame, sizeof(tganame), "imagedump/%s.tga", tempname);
 
 		GL_Bind (glt);
+#ifndef VITA
 		glPixelStorei (GL_PACK_ALIGNMENT, 1);/* for widths that aren't a multiple of 4 */
 
 		if (glt->flags & TEXPREF_ALPHA)
@@ -261,6 +262,7 @@ static void TexMgr_Imagedump_f (void)
 			Image_WriteTGA (tganame, buffer, glt->width, glt->height, 24, true);
 		}
 		free (buffer);
+#endif
 	}
 
 	Con_Printf ("dumped %i textures to %s\n", numgltextures, dirname);
@@ -1046,7 +1048,7 @@ static void TexMgr_LoadImage32 (gltexture_t *glt, unsigned *data)
 	GL_Bind (glt);
 	internalformat = (glt->flags & TEXPREF_ALPHA) ? gl_alpha_format : gl_solid_format;
 	glTexImage2D (GL_TEXTURE_2D, 0, internalformat, glt->width, glt->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-
+#ifndef VITA
 	// upload mipmaps
 	if (glt->flags & TEXPREF_MIPMAP)
 	{
@@ -1068,7 +1070,7 @@ static void TexMgr_LoadImage32 (gltexture_t *glt, unsigned *data)
 			glTexImage2D (GL_TEXTURE_2D, miplevel, internalformat, mipwidth, mipheight, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		}
 	}
-
+#endif
 	// set filter modes
 	TexMgr_SetFilterModes (glt);
 }

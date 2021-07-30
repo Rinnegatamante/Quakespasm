@@ -87,7 +87,12 @@ static void Sys_InitSDL (void)
 	atexit(Sys_AtExit);
 }
 
+#ifdef VITA
+#include <vitasdk.h>
+#define DEFAULT_MEMORY (128 * 1024 * 1024) // ericw -- was 72MB (64-bit) / 64MB (32-bit)
+#else
 #define DEFAULT_MEMORY (256 * 1024 * 1024) // ericw -- was 72MB (64-bit) / 64MB (32-bit)
+#endif
 
 static quakeparms_t	parms;
 
@@ -97,13 +102,25 @@ static quakeparms_t	parms;
 #define main SDL_main
 #endif
 
+#ifdef VITA
+int quake_main (unsigned int argc, void* argv)
+#else
 int main(int argc, char *argv[])
+#endif
 {
+#ifdef VITA
+	sceSysmoduleLoadModule(SCE_SYSMODULE_NET);
+	sceSysmoduleLoadModule(SCE_SYSMODULE_PSPNET_ADHOC);
+	scePowerSetArmClockFrequency(444);
+	scePowerSetBusClockFrequency(222);
+	scePowerSetGpuClockFrequency(222);
+	scePowerSetGpuXbarClockFrequency(166);
+#endif
 	int		t;
 	double		time, oldtime, newtime;
 
 	host_parms = &parms;
-	parms.basedir = ".";
+	parms.basedir = "ux0:data/Quakespasm";
 
 	parms.argc = argc;
 	parms.argv = argv;
@@ -162,6 +179,7 @@ int main(int argc, char *argv[])
 	else
 	while (1)
 	{
+#ifndef VITA
 		/* If we have no input focus at all, sleep a bit */
 		if (!VID_HasMouseOrInputFocus() || cl.paused)
 		{
@@ -177,17 +195,30 @@ int main(int argc, char *argv[])
 		{
 			scr_skipupdate = 0;
 		}
+#endif
 		newtime = Sys_DoubleTime ();
 		time = newtime - oldtime;
 
 		Host_Frame (time);
-
+#ifndef VITA
 		if (time < sys_throttle.value && !cls.timedemo)
 			SDL_Delay(1);
-
+#endif
 		oldtime = newtime;
 	}
 
 	return 0;
 }
 
+#ifdef VITA
+int main(int argc, char **argv)
+{
+	// We need a bigger stack to run Quake, so we create a new thread with a proper stack size
+	SceUID main_thread = sceKernelCreateThread("Quake", quake_main, 0x40, 0x800000, 0, 0, NULL);
+	if (main_thread >= 0) {
+		sceKernelStartThread(main_thread, 0, NULL);
+		sceKernelWaitThreadEnd(main_thread, NULL, NULL);
+	}
+	return 0;
+}
+#endif

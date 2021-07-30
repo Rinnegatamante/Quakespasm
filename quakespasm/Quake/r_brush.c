@@ -82,8 +82,11 @@ void DrawGLPoly (glpoly_t *p)
 {
 	float	*v;
 	int		i;
-
+#ifdef VITA
+	glBegin(GL_TRIANGLE_FAN);
+#else
 	glBegin (GL_POLYGON);
+#endif
 	v = p->verts[0];
 	for (i=0 ; i<p->numverts ; i++, v+= VERTEXSIZE)
 	{
@@ -209,7 +212,11 @@ void R_DrawSequentialPoly (msurface_t *s)
 			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 			glColor3f(0.5, 0.5, 0.5);
 		}
+#ifdef VITA
+		glBegin(GL_TRIANGLE_FAN);
+#else
 		glBegin (GL_POLYGON);
+#endif
 		v = s->polys->verts[0];
 		for (i=0 ; i<s->polys->numverts ; i++, v+= VERTEXSIZE)
 		{
@@ -322,7 +329,11 @@ void R_DrawSequentialPoly (msurface_t *s)
 			glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_EXT, GL_PREVIOUS_EXT);
 			glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB_EXT, GL_TEXTURE);
 			glTexEnvf(GL_TEXTURE_ENV, GL_RGB_SCALE_EXT, 2.0f);
+#ifdef VITA
+			glBegin(GL_TRIANGLE_FAN);
+#else
 			glBegin(GL_POLYGON);
+#endif
 			v = s->polys->verts[0];
 			for (i=0 ; i<s->polys->numverts ; i++, v+= VERTEXSIZE)
 			{
@@ -358,7 +369,11 @@ void R_DrawSequentialPoly (msurface_t *s)
 			glEnable (GL_BLEND);
 			glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR); //2x modulate
 			Fog_StartAdditive ();
+#ifdef VITA
+			glBegin(GL_TRIANGLE_FAN);
+#else
 			glBegin (GL_POLYGON);
+#endif
 			v = s->polys->verts[0];
 			for (i=0 ; i<s->polys->numverts ; i++, v+= VERTEXSIZE)
 			{
@@ -397,7 +412,11 @@ void R_DrawSequentialPoly (msurface_t *s)
 			GL_Bind (lightmap_textures[s->lightmaptexturenum]);
 			R_RenderDynamicLightmaps (s);
 			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+#ifdef VITA
+			glBegin(GL_TRIANGLE_FAN);
+#else
 			glBegin(GL_POLYGON);
+#endif
 			v = s->polys->verts[0];
 			for (i=0 ; i<s->polys->numverts ; i++, v+= VERTEXSIZE)
 			{
@@ -431,7 +450,11 @@ void R_DrawSequentialPoly (msurface_t *s)
 			glEnable (GL_BLEND);
 			glBlendFunc (GL_ZERO, GL_SRC_COLOR); //modulate
 			Fog_StartAdditive ();
+#ifdef VITA
+			glBegin(GL_TRIANGLE_FAN);
+#else
 			glBegin (GL_POLYGON);
+#endif
 			v = s->polys->verts[0];
 			for (i=0 ; i<s->polys->numverts ; i++, v+= VERTEXSIZE)
 			{

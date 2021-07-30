@@ -48,6 +48,20 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "SDL.h"
 #endif
 
+#ifdef VITA
+#include <dirent.h>
+int _newlib_heap_size_user = 256 * 1024 * 1024;
+
+#define MAX_CURDIR_PATH 512
+char cur_dir[MAX_CURDIR_PATH] = "ux0:data/Quakespasm/";
+int can_use_IME_keyboard = 1;
+char *getcwd(char *buf, size_t size) {
+    if (buf != NULL) {
+        strncpy(buf, cur_dir, size);
+    }
+    return cur_dir;
+}
+#endif
 
 qboolean		isDedicated;
 cvar_t		sys_throttle = {"sys_throttle", "0.02", CVAR_ARCHIVE};
@@ -347,13 +361,21 @@ void Sys_Init (void)
 	Sys_mkdir (userdir);
 	host_parms->userdir = userdir;
 #endif
+#ifdef VITA
+	host_parms->numcpus = 4;
+#else
 	host_parms->numcpus = Sys_NumCPUs ();
+#endif
 	Sys_Printf("Detected %d CPUs.\n", host_parms->numcpus);
 }
 
 void Sys_mkdir (const char *path)
 {
+#ifndef VITA
 	int rc = mkdir (path, 0777);
+#else
+	int rc = sceIoMkdir (path, 0777);
+#endif
 	if (rc != 0 && errno == EEXIST)
 	{
 		struct stat st;
@@ -380,6 +402,13 @@ void Sys_Error (const char *error, ...)
 	va_start (argptr, error);
 	q_vsnprintf (text, sizeof(text), error, argptr);
 	va_end (argptr);
+
+#ifdef VITA
+	sceClibPrintf(errortxt1);
+	sceClibPrintf(errortxt2);
+	sceClibPrintf(text);
+	sceClibPrintf("\n\n");
+#endif
 
 	fputs (errortxt1, stderr);
 	Host_Shutdown ();
