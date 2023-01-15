@@ -951,11 +951,9 @@ void GLWorld_CreateShaders (void)
 	if (r_world_program != 0)
 	{
 		// get uniform locations
-#ifndef VITA
 		texLoc = GL_GetUniformLocation (&r_world_program, "Tex");
 		LMTexLoc = GL_GetUniformLocation (&r_world_program, "LMTex");
 		fullbrightTexLoc = GL_GetUniformLocation (&r_world_program, "FullbrightTex");
-#endif
 		useFullbrightTexLoc = GL_GetUniformLocation (&r_world_program, "UseFullbrightTex");
 		useOverbrightLoc = GL_GetUniformLocation (&r_world_program, "UseOverbright");
 		useAlphaTestLoc = GL_GetUniformLocation (&r_world_program, "UseAlphaTest");
@@ -1010,11 +1008,11 @@ void R_DrawTextureChains_GLSL (qmodel_t *model, entity_t *ent, texchain_t chain)
 	GL_VertexAttribPointerFunc (LMCoordsAttrIndex,  2, GL_FLOAT, GL_FALSE, VERTEXSIZE * sizeof(float), ((float *)0) + 5);
 	
 // set uniforms
-#ifndef VITA
+
 	GL_Uniform1iFunc (texLoc, 0);
 	GL_Uniform1iFunc (LMTexLoc, 1);
 	GL_Uniform1iFunc (fullbrightTexLoc, 2);
-#endif
+
 	GL_Uniform1iFunc (useFullbrightTexLoc, 0);
 	GL_Uniform1iFunc (useOverbrightLoc, (int)gl_overbright.value);
 	GL_Uniform1iFunc (useAlphaTestLoc, 0);
