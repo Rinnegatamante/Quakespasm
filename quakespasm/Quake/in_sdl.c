@@ -890,19 +890,23 @@ void IN_MouseMove(usercmd_t *cmd)
 
 	total_dx = 0;
 	total_dy = 0;
-
+#ifndef __vita__
 	if ( (in_strafe.state & 1) || (lookstrafe.value && (in_mlook.state & 1) ))
 		cmd->sidemove += m_side.value * dmx;
 	else
+#endif
 		cl.viewangles[YAW] -= m_yaw.value * dmx * cl.csqc_sensitivity;
-
+#ifndef __vita__
 	if (in_mlook.state & 1)
 	{
 		if (dmx || dmy)
+#endif
 			V_StopPitchDrift ();
+#ifndef __vita__
 	}
 
 	if ( (in_mlook.state & 1) && !(in_strafe.state & 1))
+#endif
 	{
 		cl.viewangles[PITCH] += m_pitch.value * dmy * cl.csqc_sensitivity;
 		/* johnfitz -- variable pitch clamping */
@@ -911,6 +915,7 @@ void IN_MouseMove(usercmd_t *cmd)
 		if (cl.viewangles[PITCH] < cl_minpitch.value)
 			cl.viewangles[PITCH] = cl_minpitch.value;
 	}
+#ifndef __vita__
 	else
 	{
 		if ((in_strafe.state & 1) && noclip_anglehack)
@@ -918,6 +923,7 @@ void IN_MouseMove(usercmd_t *cmd)
 		else
 			cmd->forwardmove -= m_forward.value * dmy;
 	}
+#endif
 }
 
 void IN_Move(usercmd_t *cmd)
