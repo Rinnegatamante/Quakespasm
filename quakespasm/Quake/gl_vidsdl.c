@@ -99,6 +99,8 @@ extern cvar_t	r_lerpmodels;
 extern cvar_t	r_lerpmoves;
 extern cvar_t r_viewmodeloffset;
 extern cvar_t scr_showfps;
+extern cvar_t	joy_sensitivity_yaw;
+extern cvar_t	joy_sensitivity_pitch;
 
 char *w_pos[] = {"Center", "Right", "Left", "Hidden"};
 int w_pos_idx = -1;
@@ -1942,6 +1944,8 @@ enum {
 	VID_OPT_GYROSCOPE,
 	VID_OPT_GYRO_HORI,
 	VID_OPT_GYRO_VERT,
+	VID_OPT_ANALOG_HORI,
+	VID_OPT_ANALOG_VERT,
 	VID_OPT_WEAPON_POS,
 	VIDEO_OPTIONS_ITEMS
 };
@@ -2278,6 +2282,22 @@ static void VID_MenuKey (int key)
 				motion_vertical_sensitivity.value = 10;
 			Cvar_SetValue ("motion_vertical_sensitivity", motion_vertical_sensitivity.value);
 			break;
+		case VID_OPT_ANALOG_HORI:
+			joy_sensitivity_yaw.value -= 20;
+			if (joy_sensitivity_yaw.value < 0)
+				joy_sensitivity_yaw.value = 0;
+			if (joy_sensitivity_yaw.value > 500)
+				joy_sensitivity_yaw.value = 500;
+			Cvar_SetValue ("joy_sensitivity_yaw", joy_sensitivity_yaw.value);
+			break;
+		case VID_OPT_ANALOG_VERT:
+			joy_sensitivity_pitch.value -= 20;
+			if (joy_sensitivity_pitch.value < 0)
+				joy_sensitivity_pitch.value = 0;
+			if (joy_sensitivity_pitch.value > 300)
+				joy_sensitivity_pitch.value = 300;
+			Cvar_SetValue ("joy_sensitivity_pitch", joy_sensitivity_pitch.value);
+			break;
 		case VID_OPT_VSYNC:
 			Cvar_SetValue ("vid_vsync", !vid_vsync.value);
 			break;
@@ -2347,6 +2367,22 @@ static void VID_MenuKey (int key)
 			if (motion_vertical_sensitivity.value > 10)
 				motion_vertical_sensitivity.value = 10;
 			Cvar_SetValue ("motion_vertical_sensitivity", motion_vertical_sensitivity.value);
+			break;
+		case VID_OPT_ANALOG_HORI:
+			joy_sensitivity_yaw.value += 20;
+			if (joy_sensitivity_yaw.value < 0)
+				joy_sensitivity_yaw.value = 0;
+			if (joy_sensitivity_yaw.value > 500)
+				joy_sensitivity_yaw.value = 500;
+			Cvar_SetValue ("joy_sensitivity_yaw", joy_sensitivity_yaw.value);
+			break;
+		case VID_OPT_ANALOG_VERT:
+			joy_sensitivity_pitch.value += 20;
+			if (joy_sensitivity_pitch.value < 0)
+				joy_sensitivity_pitch.value = 0;
+			if (joy_sensitivity_pitch.value > 300)
+				joy_sensitivity_pitch.value = 300;
+			Cvar_SetValue ("joy_sensitivity_pitch", joy_sensitivity_pitch.value);
 			break;
 		case VID_OPT_VSYNC:
 			Cvar_SetValue ("vid_vsync", !vid_vsync.value);
@@ -2454,7 +2490,7 @@ static void VID_MenuDraw (void)
 		switch (i)
 		{
 		case VID_OPT_FPS:
-			M_Print (16, y, "    Show Framerate");
+			M_Print (16, y, "      Show Framerate");
 			M_DrawCheckbox (220, y, scr_showfps.value);
 			break;
 		case VID_OPT_XHAIR:
@@ -2497,7 +2533,17 @@ static void VID_MenuDraw (void)
 			break;
 		case VID_OPT_GYRO_VERT:
 			M_Print (16, y, "Gyro Y Sensitivity");
-			r = motion_vertical_sensitivity.value/10;
+			r = motion_vertical_sensitivity.value/25;
+			M_DrawSlider (220, y, r);
+			break;
+		case VID_OPT_ANALOG_HORI:
+			M_Print (16, y, " Joy X Sensitivity");
+			r = joy_sensitivity_yaw.value/500;
+			M_DrawSlider (220, y, r);
+			break;
+		case VID_OPT_ANALOG_VERT:
+			M_Print (16, y, " Joy Y Sensitivity");
+			r = joy_sensitivity_pitch.value/300;
 			M_DrawSlider (220, y, r);
 			break;
 		case VID_OPT_WEAPON_POS:
