@@ -450,7 +450,7 @@ void IN_ShutdownJoystick (void)
 
 static void IN_Retrotouch_f (cvar_t *var)
 {
-	sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK, (int)retrotouch.value);
+	sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK, !(int)retrotouch.value);
 }
 
 void IN_Init (void)
@@ -1254,7 +1254,7 @@ void IN_SendKeyEvents (void)
 				Char_Event (event.key.keysym.unicode);
 #endif
 			break;
-
+#ifndef __vita__
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
 			if (event.button.button < 1 ||
@@ -1266,7 +1266,7 @@ void IN_SendKeyEvents (void)
 			}
 			Key_Event(buttonremap[event.button.button - 1], event.button.state == SDL_PRESSED);
 			break;
-
+#endif
 #if defined(USE_SDL2)
 		case SDL_MOUSEWHEEL:
 			if (event.wheel.y > 0)
