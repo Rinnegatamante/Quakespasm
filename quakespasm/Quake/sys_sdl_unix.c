@@ -56,12 +56,20 @@ int _newlib_heap_size_user = 256 * 1024 * 1024;
 #define MAX_CURDIR_PATH 512
 char cur_dir[MAX_CURDIR_PATH] = "ux0:data/Quakespasm";
 int can_use_IME_keyboard = 1;
-char *getcwd(char *buf, size_t size) {
+char *__wrap_getcwd(char *buf, size_t size) {
     if (buf != NULL) {
         strncpy(buf, cur_dir, size);
     }
     return cur_dir;
 }
+
+void *__wrap_calloc(uint32_t nmember, uint32_t size) { return vglCalloc(nmember, size); }
+void __wrap_free(void *addr) { vglFree(addr); };
+void *__wrap_malloc(uint32_t size) { return vglMalloc(size); };
+void *__wrap_memalign(uint32_t alignment, uint32_t size) { return vglMemalign(alignment, size); };
+void *__wrap_realloc(void *ptr, uint32_t size) { return vglRealloc(ptr, size); };
+void *__wrap_memcpy (void *dst, const void *src, size_t num) { return sceClibMemcpy(dst, src, num); };
+void *__wrap_memset (void *ptr, int value, size_t num) { return sceClibMemset(ptr, value, num); };
 #endif
 
 qboolean		isDedicated;

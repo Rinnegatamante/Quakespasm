@@ -16,7 +16,7 @@ USE_ZLIB=1
 ### Enable/Disable codecs for streaming music support
 USE_CODEC_WAVE=1
 USE_CODEC_FLAC=0
-USE_CODEC_MP3=1
+USE_CODEC_MP3=0
 USE_CODEC_VORBIS=1
 USE_CODEC_OPUS=1
 # either mikmod or xmp
@@ -50,8 +50,8 @@ LDFLAGS =
 DFLAGS ?=
 CFLAGS ?= -Wl,-q -g \
 	-Wall -Wno-trigraphs -I$(VITASDK)/arm-vita-eabi/include/SDL2 -fno-short-enums \
-	-DVITA -I$(VITASDK)/arm-vita-eabi/include/opus -fno-optimize-sibling-calls \
-	-DUSE_ZLIB
+	-DVITA -I$(VITASDK)/arm-vita-eabi/include/opus -fno-optimize-sibling-calls -DUSE_SDL2 \
+	-DUSE_ZLIB -Wl,-q,--wrap,memcpy,--wrap,memset,--wrap,malloc,--wrap,memalign,--wrap,free,--wrap,calloc,--wrap,realloc,--wrap,getcwd
 CFLAGS += $(CPUFLAGS)
 ifneq ($(DEBUG),0)
 DFLAGS += -DDEBUG
@@ -141,11 +141,11 @@ CFLAGS+= -DUSE_CODEC_UMX
 endif
 
 COMMON_LIBS:= -lvitaGL -lvitashark -lvorbisfile -lvorbis -logg  -lspeexdsp -lmpg123 -lScePspnetAdhoc_stub \
-	-lc -lSceLibKernel_stub -lmathneon -lSDL2 -lSceKernelDmacMgr_stub \
+	-lc -lSceLibKernel_stub -lmathneon -lSDL2 -lSceKernelDmacMgr_stub -lSceShaccCgExt -ltaihen_stub \
 	-lSceNet_stub -lSceNetCtl_stub -lpng -lSceDisplay_stub -lSceGxm_stub -lSceShaccCg_stub \
 	-lSceSysmodule_stub -lSceCtrl_stub -lSceTouch_stub -lSceMotion_stub -lm -lSceAppMgr_stub \
 	-lSceAppUtil_stub -lScePgf_stub -ljpeg -lSceRtc_stub -lScePower_stub -lcurl -lssl -lcrypto -lz \
-	-lSceHid_stub -lSceCommonDialog_stub -lSceAudio_stub
+	-lSceHid_stub -lSceCommonDialog_stub -lSceAudio_stub -lSceAudioIn_stub -lSceIme_stub
 
 ifeq ($(USE_ZLIB),1)
 CFLAGS+= -DUSE_ZLIB
