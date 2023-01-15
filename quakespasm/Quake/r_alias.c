@@ -401,10 +401,8 @@ void GLAlias_CreateShaders (void)
 			}
 			glsl->shadevectorLoc = GL_GetUniformLocation (&glsl->program, "ShadeVector");
 			glsl->lightColorLoc = GL_GetUniformLocation (&glsl->program, "LightColor");
-#ifndef VITA
 			glsl->texLoc = GL_GetUniformLocation (&glsl->program, "Tex");
 			glsl->fullbrightTexLoc = GL_GetUniformLocation (&glsl->program, "FullbrightTex");
-#endif
 			glsl->useFullbrightTexLoc = GL_GetUniformLocation (&glsl->program, "UseFullbrightTex");
 			glsl->useOverbrightLoc = GL_GetUniformLocation (&glsl->program, "UseOverbright");
 			glsl->useAlphaTestLoc = GL_GetUniformLocation (&glsl->program, "UseAlphaTest");
@@ -505,10 +503,8 @@ void GL_DrawAliasFrame_GLSL (aliasglsl_t *glsl, aliashdr_t *paliashdr, lerpdata_
 		GL_Uniform4fvFunc (glsl->bonesLoc, paliashdr->numbones*3, lerpdata.bonestate->mat);
 	GL_Uniform3fFunc (glsl->shadevectorLoc, shadevector[0], shadevector[1], shadevector[2]);
 	GL_Uniform4fFunc (glsl->lightColorLoc, lightcolor[0], lightcolor[1], lightcolor[2], entalpha);
-#ifndef VITA
 	GL_Uniform1iFunc (glsl->texLoc, 0);
 	GL_Uniform1iFunc (glsl->fullbrightTexLoc, 1);
-#endif
 	GL_Uniform1iFunc (glsl->useFullbrightTexLoc, (fb != NULL) ? 1 : 0);
 	GL_Uniform1fFunc (glsl->useOverbrightLoc, overbright ? 1 : 0);
 	GL_Uniform1iFunc (glsl->useAlphaTestLoc, (currententity->model->flags & MF_HOLEY) ? 1 : 0);
