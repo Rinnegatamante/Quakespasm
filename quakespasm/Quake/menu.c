@@ -263,10 +263,10 @@ void M_Main_Draw (void)
 	M_DrawTransPic (54, 32 + m_main_cursor * 20,Draw_CachePic( va("gfx/menudot%i.lmp", f+1 ) ) );
 	
 	M_PrintCentered (150, "Thanks for the awesome support on Patreon to:");
-	M_PrintCentered (158, "@Sarkies_Proxy, Badmanwazzy37, drd7of14");
-	M_PrintCentered (166, "Tain Sueiras, Colin VanBuren, Titi Clash");
-	M_PrintCentered (174, "Freddy Parra, The Vita3K Project");
-	M_PrintCentered (182, "UnrootedTiara, XandridFire");
+	M_PrintCentered (158, "@Sarkies_Proxy, Badmanwazzy37, drd7of14, Joey");
+	M_PrintCentered (166, "Delon5, Heraldian Despot, Jacob Martinez");
+	M_PrintCentered (174, "Freddy Parra, The Vita3K Project, Pspguru");
+	M_PrintCentered (182, "mmtechnodrone, Shin Megami, sputnik");
 }
 
 

@@ -450,7 +450,7 @@ void IN_ShutdownJoystick (void)
 
 static void IN_Retrotouch_f (cvar_t *var)
 {
-	sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK, !(int)retrotouch.value);
+	sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK, (int)retrotouch.value);
 }
 
 void IN_Init (void)
@@ -1287,11 +1287,11 @@ void IN_SendKeyEvents (void)
 			}
 			break;
 #endif
-
+#ifndef __vita__
 		case SDL_MOUSEMOTION:
 			IN_MouseMotion(event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y);
 			break;
-
+#endif
 #if defined(USE_SDL2)
 		case SDL_CONTROLLERDEVICEADDED:
 			if (joy_active_instaceid == -1)
@@ -1333,6 +1333,27 @@ void IN_SendKeyEvents (void)
 			break;
 		}
 	}
+#ifdef __vita__
+	static int old_touch_x = -1, old_touch_y = -1;
+	SceTouchData touch;
+	if (retrotouch.value)
+		sceTouchPeek(SCE_TOUCH_PORT_BACK, &touch, 1);
+	else
+		sceTouchPeek(SCE_TOUCH_PORT_FRONT, &touch, 1);
+	if (touch.reportNum > 0) {
+		int delta_x = 0, delta_y = 0;
+		if (old_touch_x >= 0) {
+			delta_x = touch.report[0].x / 2 - old_touch_x;
+			delta_y = touch.report[0].y / 2 - old_touch_y;
+		}
+		IN_MouseMotion(delta_x, delta_y, touch.report[0].x / 2, touch.report[0].y / 2);
+		old_touch_x = touch.report[0].x / 2;
+		old_touch_y = touch.report[0].y / 2;
+	} else {
+		old_touch_x = -1;
+		old_touch_y = -1;
+	}
+#endif
 }
 
 #ifdef VITA
