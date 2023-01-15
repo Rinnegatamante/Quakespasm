@@ -1238,7 +1238,11 @@ void M_Options_Draw (void)
 #endif
 
 	// OPT_MOUSESPEED:
+#ifdef __vita__
+	M_Print (16, 32 + 8*OPT_MOUSESPEED,	"     Touch Sensitivity");
+#else
 	M_Print (16, 32 + 8*OPT_MOUSESPEED,	"           Mouse Speed");
+#endif
 	r = (sensitivity.value - 1)/10;
 	M_DrawSlider (220, 32 + 8*OPT_MOUSESPEED, r);
 
