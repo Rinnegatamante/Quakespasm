@@ -2484,7 +2484,7 @@ CL_ParseServerMessage
 void CL_ParseServerMessage (void)
 {
 	int			cmd;
-	int			i;
+	int			i,j;
 	const char		*str; //johnfitz
 	int			lastcmd; //johnfitz
 
@@ -2631,25 +2631,25 @@ void CL_ParseServerMessage (void)
 		case svc_updatename:
 			Sbar_Changed ();
 			i = MSG_ReadByte ();
-			if (i >= cl.maxclients)
-				Host_Error ("CL_ParseServerMessage: svc_updatename > MAX_SCOREBOARD");
-			q_strlcpy (cl.scores[i].name, MSG_ReadString(), MAX_SCOREBOARDNAME);
+			str = MSG_ReadString();
+			if (i < cl.maxclients)
+				q_strlcpy (cl.scores[i].name, str, MAX_SCOREBOARDNAME);
 			break;
 
 		case svc_updatefrags:
 			Sbar_Changed ();
 			i = MSG_ReadByte ();
-			if (i >= cl.maxclients)
-				Host_Error ("CL_ParseServerMessage: svc_updatefrags > MAX_SCOREBOARD");
-			cl.scores[i].frags = MSG_ReadShort ();
+			j = MSG_ReadShort();
+			if (i < cl.maxclients)
+				cl.scores[i].frags = j;
 			break;
 
 		case svc_updatecolors:
 			Sbar_Changed ();
 			i = MSG_ReadByte ();
-			if (i >= cl.maxclients)
-				Host_Error ("CL_ParseServerMessage: svc_updatecolors > MAX_SCOREBOARD");
-			CL_NewTranslation (i, MSG_ReadByte());
+			j = MSG_ReadByte ();
+			if (i < cl.maxclients)
+				CL_NewTranslation (i, j);
 			break;
 
 		case svc_particle:
