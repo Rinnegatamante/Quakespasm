@@ -176,6 +176,9 @@ endif
 
 LIBS := $(COMMON_LIBS) $(NET_LIBS) $(CODEC_LINK) $(CODECLIBS)
 
+ICEOBJS:= ice_gnutls.o  ice_main.o  ice_mdns.o ice_quake.o ice_sctp.o  ice_socket.o  ice_stream.o  json.o  md5.o  sha1.o  sha2.o
+
+
 # ---------------------------
 # objects
 # ---------------------------
@@ -231,6 +234,7 @@ OBJS := strlcat.o \
 	$(SYSOBJ_SND) \
 	$(SYSOBJ_CDA) \
 	$(SYSOBJ_NET) \
+	$(ICEOBJS) \
 	net_dgrm.o \
 	net_loop.o \
 	net_main.o \
@@ -279,6 +283,8 @@ OBJS := strlcat.o \
 DEFAULT_TARGET := quakespasm.exe
 all: $(DEFAULT_TARGET)
 
+%.o:	ice/%.c
+	$(CC) $(DFLAGS) -c $(CFLAGS) $(SDL_CFLAGS) -o $@ $<
 %.o:	%.c
 	$(CC) $(DFLAGS) -c $(CFLAGS) $(SDL_CFLAGS) -o $@ $<
 %.res:	../Windows/%.rc

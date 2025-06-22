@@ -58,7 +58,7 @@ cvar_t	cl_maxpitch = {"cl_maxpitch", "90", CVAR_ARCHIVE}; //johnfitz -- variable
 cvar_t	cl_minpitch = {"cl_minpitch", "-90", CVAR_ARCHIVE}; //johnfitz -- variable pitch clamping
 
 cvar_t cl_recordingdemo = {"cl_recordingdemo", "", CVAR_ROM};	//the name of the currently-recording demo.
-cvar_t	cl_demoreel = {"cl_demoreel", "0", CVAR_ARCHIVE};
+cvar_t	cl_demoreel = {"cl_demoreel", "1", CVAR_ARCHIVE};
 
 client_static_t	cls;
 client_state_t	cl;
@@ -1249,8 +1249,8 @@ int CL_ReadFromServer (void)
 		CL_ParseServerMessage ();
 	} while (ret && cls.state == ca_connected);
 
-	if (cl_shownet.value)
-		Con_Printf ("\n");
+//	if (cl_shownet.value)
+//		Con_Printf ("\n");
 
 	PR_SwitchQCVM(&cl.qcvm);
 	CL_RelinkEntities ();

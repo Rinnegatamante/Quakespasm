@@ -70,7 +70,8 @@ void Cvar_List_f (void)
 		{
 			continue;
 		}
-		Con_SafePrintf ("%s%s %s \"%s\"\n",
+		Con_SafePrintf ("%s%s%s %s \"%s\"\n",
+			strcmp(cvar->string, cvar->default_string) ? "!" : " ",
 			(cvar->flags & CVAR_ARCHIVE) ? "*" : " ",
 			(cvar->flags & CVAR_NOTIFY)  ? "s" : " ",
 			cvar->name,
@@ -125,21 +126,46 @@ void Cvar_Set_f (void)
 	const char *varname = Cmd_Argv(1);
 	const char *varvalue = Cmd_Argv(2);
 	cvar_t *var;
+	int fl = 0;
 	if (Cmd_Argc() < 3)
 	{
 		Con_Printf("%s <cvar> <value>\n", Cmd_Argv(0));
 		return;
 	}
-	if (Cmd_Argc() > 3)
+
+	if (!strcmp(Cmd_Argv(0), "setfl") && Cmd_Argc() == 4)
 	{
+		const char *as = Cmd_Argv(3);
+		for (; *as; as++)
+		{
+			switch(*as)
+			{
+			case 'a':
+				fl |= CVAR_ARCHIVE|CVAR_SETA;	//will forget other flags, but that's probably okay because this should be more for default.cfg and the other flags will get re-asserted that way anyway
+				break;
+			case 'u':
+				fl |= CVAR_USERINFO;
+				break;
+			case 's':
+				fl |= CVAR_SERVERINFO;
+				break;
+			default:
+				Con_Warning("%s \"%s\" unknown cvar flag '%c'\n", Cmd_Argv(0), varname, *as);
+				return;
+			}
+		}
+	}
+	else if (Cmd_Argc() > 3)
+	{	//dp conflicts with fte/q2. play safe and piss off anyone trying to use either. they should probably use setfl if that's what they really meant.
 		Con_Warning("%s \"%s\" command with extra args\n", Cmd_Argv(0), varname);
 		return;
 	}
-	var = Cvar_Create(varname, varvalue);
-	Cvar_SetQuick(var, varvalue);
+	else if (!strcmp(Cmd_Argv(0), "seta"))
+		fl = CVAR_ARCHIVE|CVAR_SETA;
 
-	if (!strcmp(Cmd_Argv(0), "seta"))
-		var->flags |= CVAR_ARCHIVE|CVAR_SETA;
+	var = Cvar_Create(varname, varvalue);
+	var->flags |= fl;
+	Cvar_SetQuick(var, varvalue);
 }
 
 /*
@@ -292,6 +318,7 @@ void Cvar_Init (void)
 	Cmd_AddCommand ("resetcfg", Cvar_ResetCfg_f);
 	Cmd_AddCommand ("set", Cvar_Set_f);
 	Cmd_AddCommand ("seta", Cvar_Set_f);
+	Cmd_AddCommand ("setfl", Cvar_Set_f);
 }
 
 //==============================================================================

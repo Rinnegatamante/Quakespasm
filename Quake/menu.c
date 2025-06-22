@@ -90,7 +90,7 @@ qboolean	m_return_onerror;
 char		m_return_reason [32];
 
 #define StartingGame	(m_multiplayer_cursor == 1)
-#define JoiningGame		(m_multiplayer_cursor == 0)
+#define JoiningGame		(!StartingGame) //(m_multiplayer_cursor == 0)
 #define	IPXConfig		(m_net_cursor == 0)
 #define	TCPIPConfig		(m_net_cursor == 1)
 
@@ -573,6 +573,8 @@ void M_Save_Key (int k)
 //=============================================================================
 /* MULTIPLAYER MENU */
 
+extern int	m_net_cursor;
+
 int	m_multiplayer_cursor;
 #define	MULTIPLAYER_ITEMS	3
 
@@ -634,12 +636,22 @@ void M_MultiPlayer_Key (int key)
 		switch (m_multiplayer_cursor)
 		{
 		case 0:
-			if (ipxAvailable || ipv4Available || ipv6Available)
+			if ((ipv4Available || ipv6Available) && !ipxAvailable)
+			{	//no point showing it when we can only pick udp and not ipx.
+				m_net_cursor = 1;	//tcp/ip...
+				M_Menu_LanConfig_f();
+			}
+			else if (ipxAvailable || ipv4Available || ipv6Available)
 				M_Menu_Net_f ();
 			break;
 
 		case 1:
-			if (ipxAvailable || ipv4Available || ipv6Available)
+			if ((ipv4Available || ipv6Available) && !ipxAvailable)
+			{	//no point showing it when we can only pick udp and not ipx.
+				m_net_cursor = 1;	//tcp/ip...
+				M_Menu_LanConfig_f();
+			}
+			else if (ipxAvailable || ipv4Available || ipv6Available)
 				M_Menu_Net_f ();
 			break;
 
@@ -1793,7 +1805,7 @@ static void M_Extras_AdjustSliders (int dir)
 		}
 		break;
 	case EXTRAS_YIELD:
-		Cvar_SetQuick (&sys_throttle, sys_throttle.value?"0":sys_throttle.default_string);
+		Cvar_SetQuick (&sys_throttle, sys_throttle.value>0?"0":sys_throttle.default_string);
 		break;
 	case EXTRAS_DEMOREEL:
 		m = cl_demoreel.value+dir;
@@ -1886,15 +1898,19 @@ void M_Extras_Draw (void)
 				M_Print (16, y,	"           Maximum FPS");
 			if (host_maxfps.value)
 				M_Print (220, y, va("%g", fabs(host_maxfps.value)));
+			else if (sys_throttle.value)
+				M_Print (220, y, "uncapped (partly)");
 			else
 				M_Print (220, y, "uncapped");
 			break;
 		case EXTRAS_YIELD:
 			M_Print (16, y,	"  Sleep Between Frames");
-			if (sys_throttle.value)
+			if (sys_throttle.value < 0)
+				M_Print (220, y, "always off");
+			else if (sys_throttle.value)
 				M_Print (220, y, "on");
 			else
-				M_Print (220, y, "off");
+				M_Print (220, y, "when idle");
 			break;
 		case EXTRAS_DEMOREEL:
 			M_Print (16, y,	"          Attract Mode");
@@ -1937,8 +1953,12 @@ void M_Extras_Draw (void)
 			M_Print (16, y,	"            Audio Rate");
 			if (snd_mixspeed.value == 48000)
 				M_Print (220, y, "48000 hz (DVD)");
-			else if (r_particles.value == 1)
+			else if (snd_mixspeed.value == 44100)
 				M_Print (220, y, "44100 hz (CD)");
+			else if (snd_mixspeed.value == 11025)
+				M_Print (220, y, "11025 hz (Dos Quake)");
+			else if (snd_mixspeed.value == 8000)
+				M_Print (220, y, "8000 hz (Telephone)");
 			else
 				M_Print (220, y, va("%i hz", (int)snd_mixspeed.value));
 			break;
@@ -2191,27 +2211,42 @@ void M_Quit_Draw (void) //johnfitz -- modified for new quit message
 //=============================================================================
 /* LAN CONFIG MENU */
 
-int		lanConfig_cursor = -1;
-#define NUM_LANCONFIG_CMDS	4
+enum
+{
+	lanconfig_auto = -1,	//...
+
+	lanconfig_port = 0,
+	lanconfig_cl_searchlan = 1, // ok.
+	lanconfig_cl_searchweb = 2,
+	lanconfig_cl_joinname = 3,
+	lanconfig_cl_max = 4,
+
+	lanconfig_sv_room = 1,
+	lanconfig_sv_accept = 2,
+	lanconfig_sv_max = 3,
+}		lanConfig_cursor = -1;
 
 int 	lanConfig_port;
 char	lanConfig_portname[6];
 char	lanConfig_joinname[22];
+extern cvar_t sv_port_rtc;
 
 void M_Menu_LanConfig_f (void)
 {
 	key_dest = key_menu;
 	m_state = m_lanconfig;
 	m_entersound = true;
-	if (lanConfig_cursor == -1)
+	if (lanConfig_cursor == lanconfig_auto)
 	{
-		if (JoiningGame && TCPIPConfig)
-			lanConfig_cursor = 2;
+		if (StartingGame)
+			lanConfig_cursor = lanconfig_sv_accept;
+		else if (JoiningGame && TCPIPConfig)
+			lanConfig_cursor = lanconfig_cl_searchweb;
 		else
-			lanConfig_cursor = 1;
+			lanConfig_cursor = lanconfig_cl_searchlan;
 	}
-	if (StartingGame && lanConfig_cursor >= 2)
-		lanConfig_cursor = 1;
+	if (StartingGame && lanConfig_cursor >= lanconfig_sv_max)
+		lanConfig_cursor = lanconfig_sv_accept;
 	lanConfig_port = DEFAULTnet_hostport;
 	sprintf(lanConfig_portname, "%u", lanConfig_port);
 
@@ -2293,7 +2328,7 @@ void M_LanConfig_Draw (void)
 	M_Print (basex, y, "Port");
 	M_DrawTextBox (basex+8*8, y-8, 6, 1);
 	M_Print (basex+9*8, y, lanConfig_portname);
-	if (lanConfig_cursor == 0)
+	if (lanConfig_cursor == lanconfig_port)
 	{
 		M_DrawCharacter (basex+9*8 + 8*strlen(lanConfig_portname), y, 10+((int)(realtime*4)&1));
 		M_DrawCharacter (basex-8, y, 12+((int)(realtime*4)&1));
@@ -2303,12 +2338,12 @@ void M_LanConfig_Draw (void)
 	if (JoiningGame)
 	{
 		M_Print (basex, y, "Search for local games...");
-		if (lanConfig_cursor == 1)
+		if (lanConfig_cursor == lanconfig_cl_searchlan)
 			M_DrawCharacter (basex-8, y, 12+((int)(realtime*4)&1));
 		y+=8;
 
 		M_Print (basex, y, "Search for public games...");
-		if (lanConfig_cursor == 2)
+		if (lanConfig_cursor == lanconfig_cl_searchweb)
 			M_DrawCharacter (basex-8, y, 12+((int)(realtime*4)&1));
 		y+=8;
 
@@ -2316,7 +2351,7 @@ void M_LanConfig_Draw (void)
 		y+=24;
 		M_DrawTextBox (basex+8, y-8, 22, 1);
 		M_Print (basex+16, y, lanConfig_joinname);
-		if (lanConfig_cursor == 3)
+		if (lanConfig_cursor == lanconfig_cl_joinname)
 		{
 			M_DrawCharacter (basex+16 + 8*strlen(lanConfig_joinname), y, 10+((int)(realtime*4)&1));
 			M_DrawCharacter (basex-8, y, 12+((int)(realtime*4)&1));
@@ -2325,15 +2360,31 @@ void M_LanConfig_Draw (void)
 	}
 	else
 	{
+		y+=8;	//for the port's box
+		M_Print (basex, y, "Room");
+		M_DrawTextBox (basex+8*8, y-8, 12, 1);
+		if (!strcmp(sv_port_rtc.string, "/"))
+			M_Print (basex+9*8, y, "<AUTO>");
+		else if (!strcmp(sv_port_rtc.string, ""))
+			M_Print (basex+9*8, y, "<DISABLED>");
+		else
+			M_Print (basex+9*8, y, sv_port_rtc.string);
+		if (lanConfig_cursor == lanconfig_sv_room)
+		{
+			M_DrawCharacter (basex+9*8 + 8*strlen(sv_port_rtc.string), y, 10+((int)(realtime*4)&1));
+			M_DrawCharacter (basex-8, y, 12+((int)(realtime*4)&1));
+		}
+		y += 20;
+
 		M_DrawTextBox (basex, y-8, 2, 1);
 		M_Print (basex+8, y, "OK");
-		if (lanConfig_cursor == 1)
+		if (lanConfig_cursor == lanconfig_sv_accept)
 			M_DrawCharacter (basex-8, y, 12+((int)(realtime*4)&1));
 		y += 16;
 	}
 
 	if (*m_return_reason)
-		M_PrintWhite (basex, 148, m_return_reason);
+		M_PrintWhite (basex, y, m_return_reason);
 }
 
 
@@ -2350,40 +2401,36 @@ void M_LanConfig_Key (int key)
 
 	case K_UPARROW:
 		S_LocalSound ("misc/menu1.wav");
-		lanConfig_cursor--;
-		if (lanConfig_cursor < 0)
-			lanConfig_cursor = NUM_LANCONFIG_CMDS-1;
+		if (lanConfig_cursor <= 0)
+			lanConfig_cursor = (StartingGame?lanconfig_sv_max:lanconfig_cl_max)-1;
+		else
+			lanConfig_cursor--;
 		break;
 
 	case K_DOWNARROW:
 		S_LocalSound ("misc/menu1.wav");
 		lanConfig_cursor++;
-		if (lanConfig_cursor >= NUM_LANCONFIG_CMDS)
+		if (lanConfig_cursor >= (StartingGame?lanconfig_sv_max:lanconfig_cl_max))
 			lanConfig_cursor = 0;
 		break;
 
 	case K_ENTER:
 	case K_KP_ENTER:
 	case K_ABUTTON:
-		if (lanConfig_cursor == 0)
+		if (lanConfig_cursor == lanconfig_port)
 			break;
 
 		m_entersound = true;
 
 		M_ConfigureNetSubsystem ();
 
-		if (StartingGame)
+		if (JoiningGame)
 		{
-			if (lanConfig_cursor == 1)
-				M_Menu_GameOptions_f ();
-		}
-		else
-		{
-			if (lanConfig_cursor == 1)
+			if (lanConfig_cursor == lanconfig_cl_searchlan)
 				M_Menu_Search_f(SLIST_LAN);
-			else if (lanConfig_cursor == 2)
+			else if (lanConfig_cursor == lanconfig_cl_searchweb)
 				M_Menu_Search_f(SLIST_INTERNET);
-			else if (lanConfig_cursor == 3)
+			else if (lanConfig_cursor == lanconfig_cl_joinname)
 			{
 				m_return_state = m_state;
 				m_return_onerror = true;
@@ -2393,17 +2440,31 @@ void M_LanConfig_Key (int key)
 				Cbuf_AddText ( va ("connect \"%s\"\n", lanConfig_joinname) );
 			}
 		}
+		else
+		{
+			if (lanConfig_cursor == lanconfig_sv_accept)
+				M_Menu_GameOptions_f ();
+		}
 
 		break;
 
 	case K_BACKSPACE:
-		if (lanConfig_cursor == 0)
+		if (lanConfig_cursor == lanconfig_port)
 		{
 			if (strlen(lanConfig_portname))
 				lanConfig_portname[strlen(lanConfig_portname)-1] = 0;
 		}
 
-		if (lanConfig_cursor == 3)
+		if (StartingGame && lanConfig_cursor == lanconfig_sv_room)
+		{
+			char tmp[64];
+			q_strlcpy(tmp, sv_port_rtc.string, sizeof(tmp));
+			if (*tmp)
+				tmp[strlen(tmp)-1] = 0;
+			Cvar_Set(sv_port_rtc.name, tmp);
+		}
+
+		if (JoiningGame && lanConfig_cursor == lanconfig_cl_joinname)
 		{
 			if (strlen(lanConfig_joinname))
 				lanConfig_joinname[strlen(lanConfig_joinname)-1] = 0;
@@ -2411,13 +2472,13 @@ void M_LanConfig_Key (int key)
 		break;
 	}
 
-	if (StartingGame && lanConfig_cursor >= 2)
+	/*if (StartingGame && lanConfig_cursor >= lanconfig_sv_max)
 	{
 		if (key == K_UPARROW)
 			lanConfig_cursor = 1;
 		else
 			lanConfig_cursor = 0;
-	}
+	}*/
 
 	l =  Q_atoi(lanConfig_portname);
 	if (l > 65535)
@@ -2434,7 +2495,7 @@ void M_LanConfig_Char (int key)
 
 	switch (lanConfig_cursor)
 	{
-	case 0:
+	case lanconfig_port:
 		if (key < '0' || key > '9')
 			return;
 		l = strlen(lanConfig_portname);
@@ -2444,13 +2505,26 @@ void M_LanConfig_Char (int key)
 			lanConfig_portname[l] = key;
 		}
 		break;
-	case 3:
-		l = strlen(lanConfig_joinname);
-		if (l < 21)
+	case lanconfig_sv_room:
+		if (StartingGame)
 		{
-			lanConfig_joinname[l+1] = 0;
-			lanConfig_joinname[l] = key;
+			l = strlen(sv_port_rtc.string);
+			if (l < 11)
+				Cvar_Set(sv_port_rtc.name, va("%s%s%c", ((*sv_port_rtc.string=='/')?"":"/"), sv_port_rtc.string, key));
 		}
+		break;
+	case lanconfig_cl_joinname:
+		if (JoiningGame)
+		{
+			l = strlen(lanConfig_joinname);
+			if (l < 21)
+			{
+				lanConfig_joinname[l+1] = 0;
+				lanConfig_joinname[l] = key;
+			}
+		}
+		break;
+	default:
 		break;
 	}
 }
@@ -2458,7 +2532,7 @@ void M_LanConfig_Char (int key)
 
 qboolean M_LanConfig_TextEntry (void)
 {
-	return (lanConfig_cursor == 0 || lanConfig_cursor == 3);
+	return (lanConfig_cursor == lanconfig_port || lanConfig_cursor == (StartingGame?lanconfig_sv_room:lanconfig_cl_joinname));
 }
 
 //=============================================================================

@@ -13,6 +13,9 @@ USE_SDL2=1
 ### Enable the use of zlib, for compressed pk3s.
 USE_ZLIB=1
 
+### Enable the use of gnutls, for dtls/wss(tls) support
+USE_GNUTLS=1
+
 ### Do we need to link the math library?
 LINK_M=1
 
@@ -200,6 +203,11 @@ CFLAGS+= -DUSE_ZLIB
 COMMON_LIBS+= -lz
 endif
 
+ifeq ($(USE_GNUTLS),1)
+CFLAGS+= -DUSE_GNUTLS -DGNUTLS_STATIC $(shell $(PKG_CONFIG) --cflags gnutls)
+COMMON_LIBS+= $(shell $(PKG_CONFIG) --libs gnutls)
+endif
+
 ifeq ($(LINK_M),1)
 COMMON_LIBS += -lm
 endif
@@ -210,6 +218,17 @@ LIBS := $(COMMON_LIBS) $(NET_LIBS) $(CODECLIBS)
 # objects
 # ---------------------------
 
+ICEOBJS:= ice_gnutls.o \
+	ice_main.o \
+	ice_mdns.o \
+	ice_quake.o \
+	ice_sctp.o \
+	ice_socket.o \
+	ice_stream.o \
+	json.o \
+	md5.o \
+	sha1.o \
+	sha2.o
 MUSIC_OBJS:= bgmusic.o \
 	snd_codec.o \
 	snd_flac.o \
@@ -261,6 +280,7 @@ OBJS := strlcat.o \
 	$(SYSOBJ_SND) \
 	$(SYSOBJ_CDA) \
 	$(SYSOBJ_NET) \
+	$(ICEOBJS) \
 	net_dgrm.o \
 	net_loop.o \
 	net_main.o \
@@ -310,6 +330,8 @@ DEFAULT_TARGET := quakespasm
 all: $(DEFAULT_TARGET)
 
 %.o:	%.c
+	$(CC) $(DFLAGS) -c $(CFLAGS) $(SDL_CFLAGS) -o $@ $<
+%.o:	ice/%.c
 	$(CC) $(DFLAGS) -c $(CFLAGS) $(SDL_CFLAGS) -o $@ $<
 
 quakespasm:	$(OBJS)

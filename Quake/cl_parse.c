@@ -1338,7 +1338,6 @@ static void CL_ParseServerInfo (void)
 {
 	const char	*str;
 	int		i;
-	qboolean	gamedirswitchwarning = false;
 	char gamedir[1024];
 	char protname[64];
 

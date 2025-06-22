@@ -1035,7 +1035,7 @@ User command to connect to server
 */
 static void Host_Connect_f (void)
 {
-	char	name[MAX_QPATH];
+	char	name[NET_NAMELEN];
 
 	cls.demonum = -1;		// stop demo loop in case this fails
 	if (cls.demoplayback)
