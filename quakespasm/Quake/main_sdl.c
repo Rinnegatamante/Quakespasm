@@ -154,7 +154,11 @@ int main(int argc, char *argv[])
 	vglUseTripleBuffering(GL_FALSE);
 	vglSetParamBufferSize(6 * 1024 * 1024);
 	vglSetVertexPoolSize(48 * 1024 * 1024);
+#ifdef SLAYERS
 	vglInitWithCustomThreshold(20 * 1024 * 1024, 960, 544, 2 * 1024 * 1024, 0, 0, 0, SCE_GXM_MULTISAMPLE_4X);
+#else
+	vglInitWithCustomThreshold(20 * 1024 * 1024, 960, 544, 2 * 1024 * 1024, 0, 0, 32 * 1024 * 1024, SCE_GXM_MULTISAMPLE_4X);
+#endif
 
 	// Checking for libshacccg.suprx existence
 	SceIoStat st1, st2;
