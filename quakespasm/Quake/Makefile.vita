@@ -140,7 +140,7 @@ ifeq ($(USE_CODEC_UMX),1)
 CFLAGS+= -DUSE_CODEC_UMX
 endif
 
-COMMON_LIBS:= -lvitaGL -lvitashark -lvorbisfile -lvorbis -logg  -lspeexdsp -lmpg123 -lScePspnetAdhoc_stub \
+COMMON_LIBS:= -lvitaGL -lstdc++ -lvitashark -lvorbisfile -lvorbis -logg  -lspeexdsp -lmpg123 -lScePspnetAdhoc_stub \
 	-lc -lSceLibKernel_stub -lmathneon -lSDL2 -lSceKernelDmacMgr_stub -lSceShaccCgExt -ltaihen_stub \
 	-lSceNet_stub -lSceNetCtl_stub -lpng -lSceDisplay_stub -lSceGxm_stub -lSceShaccCg_stub \
 	-lSceSysmodule_stub -lSceCtrl_stub -lSceTouch_stub -lSceMotion_stub -lm -lSceAppMgr_stub \
