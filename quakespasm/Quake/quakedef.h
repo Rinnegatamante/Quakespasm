@@ -57,7 +57,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 //define	PARANOID			// speed sapping error checking
 
+#ifdef SLAYERS
+#define	GAMENAME	"st_full"		// directory to look in by default
+#else
 #define	GAMENAME	"id1"		// directory to look in by default
+#endif
 
 #define PSET_SCRIPT		//enable the scriptable particle system (poorly ported from FTE)
 #define PSET_SCRIPT_EFFECTINFO	//scripted particle system can load dp's effects

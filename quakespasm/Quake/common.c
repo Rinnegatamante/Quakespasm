@@ -2034,7 +2034,6 @@ static int COM_FindFile (const char *filename, int *handle, FILE **file,
 		Sys_Error ("COM_FindFile: both handle and file set");
 
 	file_from_pak = 0;
-
 //
 // search through the path, one element at a time
 //
@@ -3060,6 +3059,10 @@ void COM_InitFilesystem (void) //johnfitz -- modified based on topaz's tutorial
 	int i, j;
 	const char *p;
 
+#ifdef SLAYERS
+	com_modified = true;
+#endif
+
 	Cvar_RegisterVariable (&allow_download);
 	Cvar_RegisterVariable (&registered);
 	Cvar_RegisterVariable (&cmdline);
@@ -3135,8 +3138,9 @@ void COM_InitFilesystem (void) //johnfitz -- modified based on topaz's tutorial
 		if (p != NULL)
 			COM_AddGameDirectory (p);
 	}
-
+#ifndef SLAYERS
 	COM_CheckRegistered ();
+#endif
 }
 
 
