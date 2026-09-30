@@ -52,7 +52,8 @@ CFLAGS ?= -Wl,-q -g \
 	-Wall -Wno-trigraphs -I$(VITASDK)/arm-vita-eabi/include/SDL2 -fno-short-enums \
 	-DVITA -I$(VITASDK)/arm-vita-eabi/include/opus -fno-optimize-sibling-calls -DUSE_SDL2 \
 	-DUSE_ZLIB -Wl,-q,--wrap,memcpy,--wrap,memset,--wrap,malloc,--wrap,memalign,--wrap,free,--wrap,calloc,--wrap,realloc,--wrap,getcwd
-CFLAGS += $(CPUFLAGS)
+# The engine defines legacy boolean enumerators and pre-C23 callbacks.
+CFLAGS += -std=gnu17 $(CPUFLAGS)
 ifneq ($(DEBUG),0)
 DFLAGS += -DDEBUG
 CFLAGS += -g

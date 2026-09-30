@@ -269,6 +269,24 @@ typedef struct
 #include "SDL.h"
 #include "SDL_opengl.h"
 #endif
+#ifdef VITA
+#include <psp2/gxm.h>
+// SDL_opengl.h conflicts with several vitaGL OpenGL declarations.
+void vglWaitVblankStart(GLboolean enable);
+void *vglGetProcAddress(const char *name);
+void vglSwapBuffers(GLboolean has_commondialog);
+void vglUseTripleBuffering(GLboolean usage);
+void vglSetParamBufferSize(uint32_t size);
+void vglSetCircularPoolSize(uint32_t size);
+GLboolean vglInitWithCustomThreshold(int pool_size, int width, int height,
+    int ram_threshold, int cdram_threshold, int phycont_threshold,
+    int cdlg_threshold, SceGxmMultisampleMode msaa);
+void *vglCalloc(uint32_t nmember, uint32_t size);
+void vglFree(void *addr);
+void *vglMalloc(uint32_t size);
+void *vglMemalign(uint32_t alignment, uint32_t size);
+void *vglRealloc(void *ptr, uint32_t size);
+#endif
 #ifndef APIENTRY
 #define	APIENTRY
 #endif

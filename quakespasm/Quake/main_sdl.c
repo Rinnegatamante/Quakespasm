@@ -123,12 +123,13 @@ void utf2ascii(char* dst, uint16_t* src){
 	*dst=0x00;
 }
 
-int quake_main (unsigned int argc, char *argv[])
+int quake_main (unsigned int argc, void *argp)
 #else
 int main(int argc, char *argv[])
 #endif
 {
 #ifdef VITA
+	char **argv = argp;
 	sceSysmoduleLoadModule(SCE_SYSMODULE_NET);
 	sceSysmoduleLoadModule(SCE_SYSMODULE_PSPNET_ADHOC);
 	scePowerSetArmClockFrequency(444);
@@ -153,7 +154,7 @@ int main(int argc, char *argv[])
 	sceClibPrintf("Initializing vitaGL...\n");
 	vglUseTripleBuffering(GL_FALSE);
 	vglSetParamBufferSize(6 * 1024 * 1024);
-	vglSetVertexPoolSize(48 * 1024 * 1024);
+	vglSetCircularPoolSize(48 * 1024 * 1024);
 #ifdef SLAYERS
 	vglInitWithCustomThreshold(20 * 1024 * 1024, 960, 544, 2 * 1024 * 1024, 0, 0, 0, SCE_GXM_MULTISAMPLE_4X);
 #else
